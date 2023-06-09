@@ -12,7 +12,7 @@ const sendEmail = (options) => {
     },
   });
 
-  //define the email options
+  //Define the email options
   const mailOptions = {
     from: "Adegoke Kehinde <bri.mind777@gmail.com>",
     to: options.email,
