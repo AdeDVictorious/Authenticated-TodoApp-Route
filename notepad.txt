@@ -1,0 +1,202 @@
+/////(Example 1.) This is one way of uploading image using multer 
+const multer = require("multer");
+
+/////This save the image to the diskStorage
+const multerStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "public/img/user");
+ },
+
+filename: (req, file, cb) => {
+        ////file Extension
+   const ext = file.mimetype.split("/")[1];
+    cb(null, `user-${req.userInfo._id}-${Date.now()}.${ext}`);
+   },
+});
+
+
+////This is the filter
+const multerFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith("image")) {
+    cb(null, true);
+  } else {
+    cb(null, false);
+  }
+};
+
+const upload = multer({
+  storage: multerStorage,
+  fileFilter: multerFilter,
+});
+
+const uploadUserPhoto = upload.single("photo");
+
+module.exports = uploadUserPhoto;
+
+
+But if we need arise for us to resize the image we make use of the sharp package and the code goes like This ::::
+
+/////(Example 2.) This is one way of uploading image using multer 
+
+const multer = require("multer");
+
+/////While the code below will save it to the memory where it can be read as buffer
+const multerStorage = multer.memoryStorage();
+
+////This is the filter
+const multerFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith("image")) {
+    cb(null, true);
+  } else {
+    cb(null, false);
+  }
+};
+
+const upload = multer({
+  storage: multerStorage,
+  fileFilter: multerFilter,
+});
+
+const uploadUserPhoto = upload.single("photo");
+
+module.exports = uploadUserPhoto;
+
+while we create another midlleware function to do the resizing of the image which goes like this :::::
+
+
+const sharp = require("sharp");
+
+const resizeUserPhoto = (req, res, next) => {
+  if (!req.file) return next();
+
+  req.file.filename = `user-${req.userInfo._id}-${Date.now()}.jpeg`;
+  sharp(req.file.buffer)
+    .resize(500, 500)
+    .toFormat("jpeg")
+    .jpeg({ quality: 90 })
+    .toFile(`public/img/user/${req.file.filename}`);
+
+  next();
+};
+
+module.exports = resizeUserPhoto;
+
+
+
+the 2 middleware comes after user is authorized or login, because we are going to use their userInfo._id
+
+
+
+
+
+/////////-----------This is for reset password link------------------////////////////
+const nodemailer = require("nodemailer");
+
+const sendEmail = (options) => {
+  //create a transporter
+  const transporter = nodemailer.createTransport({
+    // service: "Gmail",   //for gmail use only
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT,
+    auth: {
+      user: process.env.EMAIL_USERNAME,
+      pass: process.env.EMAil_PASSWORD,
+    },
+  });
+  //define the email options
+  const mailOptions = {
+    from: "Adegoke Kehinde <bri.mind777@gmail.com>",
+    to: options.email,
+    subject: options.subject,
+    text: options.message,
+    // html:
+  };
+  //send the email
+  transporter.sendMail(mailOptions);
+};
+
+module.exports = sendEmail;
+
+
+
+
+//////---------This is for reset password link another example-------------/////////
+
+/////----But this more advance and it require the use of frontend page being --////
+
+const nodemailer = require("nodemailer");
+const pug = require("pug");
+const htmlToText = require("html-to-text");
+
+module.exports = class Email {
+  constructor(user, url) {
+    this.to = user.email;
+    this.firstName = user.name.split(" ")[0];
+    this.url = url;
+    this.from = `Adegoke Kehinde <${process.env.EMAIL_FROM}>`;
+  }
+
+  createTransport() {
+    if (process.env.NODE_ENV === "production") {
+      ////sendgrid
+      return 1;
+    }
+
+    return nodemailer.createTransport({
+      // service: "Gmail",   //for gmail use only
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      auth: {
+        user: process.env.EMAIL_USERNAME,
+        pass: process.env.EMAil_PASSWORD,
+      },
+    });
+  }
+
+  ////Send the actual email
+  async send(template, subject) {
+    // 1) Render the HTML base on a pug template
+    const html = pug.renderFile(
+      `${__dirname}/../views/emails/${template}.pug`,
+      {
+        firstName: this.firstName,
+        url: this.url,
+        subject,
+      }
+    );
+
+    // 2) Define the email options
+    const mailOptions = {
+      from: this.from,
+      to: options.email,
+      subject,
+      html,
+      text: htmlToText.fromStrong(html),
+      // html:
+    };
+
+    /// 3) Create a transport and send email
+    await this.newtransporter.sendMail(mailOptions);
+  }
+
+  async sendWelcome() {
+    await this.send("welcome", "welcome to the developer community");
+  }
+};
+
+
+node_modules/
+# *.env all the enviroment file. 
+
+
+
+
+
+
+
+
+
+
+
+
+
