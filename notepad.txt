@@ -186,7 +186,7 @@ module.exports = class Email {
 
 
 node_modules/
-# *.env all the enviroment file. 
+*.env all the enviroment file. 
 
 
 
